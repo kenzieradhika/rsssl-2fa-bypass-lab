@@ -1,0 +1,7 @@
+wp/
+plugins/
+*.log
+cj*.txt
+*.html
+*.json
+h*.txt

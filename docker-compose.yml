@@ -1,0 +1,42 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpw
+      MARIADB_DATABASE: wp
+      MARIADB_USER: wp
+      MARIADB_PASSWORD: wppw
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "127.0.0.1", "-uroot", "-prootpw"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  wp:
+    image: wordpress:6.8-php8.2-apache
+    ports: ["8089:80"]
+    volumes:
+      - ./wp:/var/www/html
+      - ./plugins:/plugins:ro
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wp
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wppw
+    depends_on:
+      db:
+        condition: service_healthy
+
+  cli:
+    image: wordpress:cli-php8.2
+    depends_on: [wp]
+    user: "33:33"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wp
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wppw
+    volumes:
+      - ./plugins:/plugins:ro
+      - ./wp:/var/www/html
+    entrypoint: ["tail", "-f", "/dev/null"]
